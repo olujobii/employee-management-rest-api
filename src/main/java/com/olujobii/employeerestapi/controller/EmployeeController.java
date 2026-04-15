@@ -1,7 +1,7 @@
 package com.olujobii.employeerestapi.controller;
 
 import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.entity.Employee;
+import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
 import com.olujobii.employeerestapi.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -23,14 +23,14 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // FIXME: Still going to add search params and return list of List<EmployeeResponseDto>
+    // FIXME: Still going to add search params
     @GetMapping
-    public ResponseEntity<List<Employee>> getEmployees(){
+    public ResponseEntity<List<EmployeeResponseDto>> getEmployees(){
         return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployees());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id){
+    public ResponseEntity<EmployeeResponseDto> getEmployeeById(@PathVariable Long id){
         return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployeeById(id));
     }
 }

@@ -1,11 +1,13 @@
 package com.olujobii.employeerestapi.service.impl;
 
 import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
+import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
 import com.olujobii.employeerestapi.entity.Employee;
 import com.olujobii.employeerestapi.exception.DuplicateEmailException;
 import com.olujobii.employeerestapi.exception.EmployeeNotFoundException;
 import com.olujobii.employeerestapi.exception.InvalidSalaryException;
 import com.olujobii.employeerestapi.mapper.EmployeeMapper;
+import com.olujobii.employeerestapi.mapper.EmployeeResponseMapper;
 import com.olujobii.employeerestapi.repository.EmployeeRepository;
 import com.olujobii.employeerestapi.service.EmployeeService;
 import jakarta.validation.Valid;
@@ -39,16 +41,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<Employee> getEmployees(){
-        return employeeRepository.findAll();
+    public List<EmployeeResponseDto> getEmployees(){
+        List<Employee> employees = employeeRepository.findAll();
+
+        //Map employees to EmployeeResponseDto and returning list of EmployeeResponseDto object
+        return employees.stream().map(employee -> EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
+                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment(),employee.getSalary(),
+                employee.getDateOfJoining(),employee.getActive())
+        ).toList();
     }
 
     @Override
-    public Employee getEmployeeById(Long id){
-        return employeeRepository.findById(id)
+    public EmployeeResponseDto getEmployeeById(Long id){
+        Employee employee = employeeRepository.findById(id)
+                //FIXME: Saying Throwable Supplier does not return any exception
                 .orElseThrow(() -> {
                     throw new EmployeeNotFoundException("Employee does not exist");
                 });
+
+        return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
+                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment(),employee.getSalary(),
+                employee.getDateOfJoining(),employee.getActive());
     }
 
     private void validateSalary(EmployeeRequestDto employeeRequestDto){

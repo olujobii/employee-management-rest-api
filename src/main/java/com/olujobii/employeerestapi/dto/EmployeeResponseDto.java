@@ -11,7 +11,5 @@ public record EmployeeResponseDto(Long id,
                                   String department,
                                   BigDecimal salary,
                                   LocalDate dateOfJoining,
-                                  boolean active,
-                                  LocalDateTime createdAt,
-                                  LocalDateTime updatedAt) {
+                                  boolean active) {
 }

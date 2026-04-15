@@ -1,7 +1,7 @@
 package com.olujobii.employeerestapi.service;
 
 import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.entity.Employee;
+import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
 public interface EmployeeService {
     void createEmployee(@Valid EmployeeRequestDto employeeRequestDto);
 
-    List<Employee> getEmployees();
+    List<EmployeeResponseDto> getEmployees();
 
-    Employee getEmployeeById(Long id);
+     EmployeeResponseDto getEmployeeById(Long id);
 }
