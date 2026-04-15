@@ -1,9 +1,9 @@
-package com.olujobii.employeerestapi.controller;
+package com.olujobii.employeerestapi.employee.controller;
 
-import com.olujobii.employeerestapi.dto.EmployeePatchRequestDto;
-import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
-import com.olujobii.employeerestapi.service.EmployeeService;
+import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
+import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

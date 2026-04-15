@@ -1,6 +1,6 @@
-package com.olujobii.employeerestapi.repository;
+package com.olujobii.employeerestapi.employee.repository;
 
-import com.olujobii.employeerestapi.entity.Employee;
+import com.olujobii.employeerestapi.employee.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

@@ -1,8 +1,8 @@
-package com.olujobii.employeerestapi.service;
+package com.olujobii.employeerestapi.employee.service;
 
-import com.olujobii.employeerestapi.dto.EmployeePatchRequestDto;
-import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
+import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
 import jakarta.validation.Valid;
 
 import java.util.List;

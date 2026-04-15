@@ -1,6 +1,6 @@
-package com.olujobii.employeerestapi.exception;
+package com.olujobii.employeerestapi.employee.exception;
 
-import com.olujobii.employeerestapi.dto.ErrorResponseDto;
+import com.olujobii.employeerestapi.employee.dto.ErrorResponseDto;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
