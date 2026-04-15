@@ -10,7 +10,7 @@ public class EmployeeMapper {
                 employeeRequestDto.firstName().trim(),
                 employeeRequestDto.lastName().trim(),
                 employeeRequestDto.email().trim().toLowerCase(),
-                employeeRequestDto.department().trim(),
+                employeeRequestDto.department().trim().toUpperCase(),
                 employeeRequestDto.salary(),
                 employeeRequestDto.dateOfJoining(),
                 employeeRequestDto.active()

@@ -1,11 +1,10 @@
 package com.olujobii.employeerestapi.service.impl;
 
+import com.olujobii.employeerestapi.dto.EmployeePatchRequestDto;
 import com.olujobii.employeerestapi.dto.EmployeeRequestDto;
 import com.olujobii.employeerestapi.dto.EmployeeResponseDto;
 import com.olujobii.employeerestapi.entity.Employee;
-import com.olujobii.employeerestapi.exception.DuplicateEmailException;
-import com.olujobii.employeerestapi.exception.EmployeeNotFoundException;
-import com.olujobii.employeerestapi.exception.InvalidSalaryException;
+import com.olujobii.employeerestapi.exception.*;
 import com.olujobii.employeerestapi.mapper.EmployeeMapper;
 import com.olujobii.employeerestapi.mapper.EmployeeResponseMapper;
 import com.olujobii.employeerestapi.repository.EmployeeRepository;
@@ -27,7 +26,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void createEmployee(@Valid EmployeeRequestDto employeeRequestDto){
         //Check if employee ID exists
-        employeeRepository.findByEmail(employeeRequestDto.email().trim())
+        employeeRepository.findByEmail(employeeRequestDto.email().trim().toLowerCase())
                 .ifPresent(employee -> {
                     throw new DuplicateEmailException("Email already exists");
                 });
@@ -62,6 +61,82 @@ public class EmployeeServiceImpl implements EmployeeService {
         return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
                 employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment(),employee.getSalary(),
                 employee.getDateOfJoining(),employee.getActive());
+    }
+
+    @Override
+    public void updateEmployeeData(Long id,@Valid EmployeeRequestDto employeeRequestDto) {
+        Employee employee = employeeRepository.findById(id)
+                //FIXME: Saying Throwable Supplier does not return any exception
+                .orElseThrow(() -> {
+                    throw new EmployeeNotFoundException("Employee does not exist");
+                });
+
+        //Check if email exists
+        employeeRepository.findByEmail(employeeRequestDto.email().trim().toLowerCase())
+                .ifPresent(emp -> {
+                    throw new DuplicateEmailException("Email already exists");
+                });
+
+        employee.setFirstName(employeeRequestDto.firstName().trim());
+        employee.setLastName(employeeRequestDto.lastName().trim());
+        employee.setDepartment(employeeRequestDto.department().trim().toUpperCase());
+        employee.setEmail(employeeRequestDto.email().trim().toLowerCase());
+        employee.setSalary(employeeRequestDto.salary());
+        employee.setDateOfJoining(employeeRequestDto.dateOfJoining());
+        employee.setActive(employeeRequestDto.active());
+
+        employeeRepository.save(employee);
+    }
+
+    @Override
+    public void updateSpecificEmployeeData(Long id, EmployeePatchRequestDto employeePatchRequestDto) {
+        Employee employee = employeeRepository.findById(id)
+                //FIXME: Saying Throwable Supplier does not return any exception
+                .orElseThrow(() -> {
+                    throw new EmployeeNotFoundException("Employee does not exist");
+                });
+
+        if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.department() == null
+                && employeePatchRequestDto.active() == null)
+            throw new InvalidPatchRequestBodyException("Only department, salary or " +
+                    "active fields can be passed in request body");
+
+        if(employeePatchRequestDto.salary() != null)
+            employee.setSalary(employeePatchRequestDto.salary());
+
+        if(employeePatchRequestDto.department() != null)
+            employee.setDepartment(employeePatchRequestDto.department().trim().toUpperCase());
+
+        if(employeePatchRequestDto.active() != null)
+            employee.setActive(employeePatchRequestDto.active());
+
+        employeeRepository.save(employee);
+    }
+
+    @Override
+    public void softDeleteEmployee(Long id) {
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> {
+            //FIXME: Saying Throwable Supplier does not return any exception
+            throw new EmployeeNotFoundException("Employee does not exist");
+        });
+
+        if(!employee.getActive())
+            return;
+
+        employee.setActive(false);
+        employeeRepository.save(employee);
+    }
+
+    @Override
+    public void hardDeleteEmployee(Long id){
+        Employee employee = employeeRepository.findById(id).orElseThrow(() -> {
+            throw new EmployeeNotFoundException("Employee does not exist");
+        });
+
+        if(employee.getActive())
+            throw new InvalidActiveFieldException("Cannot hard delete an active employee");
+
+        employeeRepository.deleteById(id);
     }
 
     private void validateSalary(EmployeeRequestDto employeeRequestDto){

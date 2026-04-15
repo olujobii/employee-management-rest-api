@@ -32,6 +32,19 @@ public class GlobalExceptionHandler {
                 new ErrorResponseDto(HttpStatus.NOT_FOUND,ex.getMessage(),LocalDateTime.now()));
     }
 
+    @ExceptionHandler(InvalidActiveFieldException.class)
+    public ResponseEntity<ErrorResponseDto> invalidActiveField(InvalidActiveFieldException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponseDto(HttpStatus.BAD_REQUEST,ex.getMessage(),LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(InvalidPatchRequestBodyException.class)
+    public ResponseEntity<ErrorResponseDto> invalidPatchRequestBody(InvalidPatchRequestBodyException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                new ErrorResponseDto(HttpStatus.BAD_REQUEST,ex.getMessage(),LocalDateTime.now())
+        );
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDto> constraintViolation(ConstraintViolationException ex){
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
