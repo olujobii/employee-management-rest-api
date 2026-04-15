@@ -71,11 +71,13 @@ public class EmployeeServiceImpl implements EmployeeService {
                     throw new EmployeeNotFoundException("Employee does not exist");
                 });
 
-        //Check if email exists
-        employeeRepository.findByEmail(employeeRequestDto.email().trim().toLowerCase())
-                .ifPresent(emp -> {
-                    throw new DuplicateEmailException("Email already exists");
-                });
+        //Check if email exists and skip the id of the current record I want to update
+        employeeRepository.findByEmailWhereIdIsNotEqualTo(id,
+                employeeRequestDto.email().trim().toLowerCase())
+                        .ifPresent(emp -> {
+                            //FIXME: Saying Throwable Supplier does not return any exception
+                            throw new DuplicateEmailException("Email already exist");
+                        });
 
         employee.setFirstName(employeeRequestDto.firstName().trim());
         employee.setLastName(employeeRequestDto.lastName().trim());
