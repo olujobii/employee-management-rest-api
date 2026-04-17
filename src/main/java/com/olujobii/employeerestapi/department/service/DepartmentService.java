@@ -1,6 +1,6 @@
 package com.olujobii.employeerestapi.department.service;
 
-import com.olujobii.employeerestapi.department.dto.DepartmentRequestDto;
+import com.olujobii.employeerestapi.department.dto.request.DepartmentRequestDto;
 import com.olujobii.employeerestapi.department.entity.Department;
 import jakarta.validation.Valid;
 
