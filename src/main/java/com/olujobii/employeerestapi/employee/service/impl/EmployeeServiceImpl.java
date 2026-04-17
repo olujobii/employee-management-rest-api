@@ -13,6 +13,7 @@ import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import com.olujobii.employeerestapi.exception.*;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,14 +32,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void createEmployee(@Valid EmployeeRequestDto employeeRequestDto){
         employeeRepository.findByEmail(employeeRequestDto.email().trim().toLowerCase())
                 .ifPresent(employee -> {
-                    throw new DuplicateEmailException("Email already exists");
+                    throw new DuplicateEmailException("Email already exists", HttpStatus.CONFLICT);
                 });
 
-        //Checking if department exists and if department accepts intern
+        //Checking if department exists
         Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
 
         if(!validateInternAcceptance(employeeRequestDto,department))
-            throw new RuntimeException("Department does not accept intern");
+            throw new EmployeeException("Department is not currently accepting interns", HttpStatus.BAD_REQUEST);
 
         //Validation salary cap for interns and non-interns
         validateSalary(employeeRequestDto);
@@ -61,7 +62,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponseDto getEmployeeById(Long id){
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
+                .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
         return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
                 employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
@@ -71,20 +72,20 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void updateEmployeeData(Long id,@Valid EmployeeRequestDto employeeRequestDto) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
+                .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
         //Check if email exists and skip the id of the current record I want to update
         employeeRepository.findByEmailWhereIdIsNotEqualTo(id,
                 employeeRequestDto.email().trim().toLowerCase())
                         .ifPresent(emp -> {
-                            throw new DuplicateEmailException("Email already exist");
+                            throw new DuplicateEmailException("Email already exist", HttpStatus.CONFLICT);
                         });
 
-        //Check if department exists and if department accepts intern
+        //Check if department exists
         Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
 
         if(!validateInternAcceptance(employeeRequestDto,department))
-            throw new RuntimeException("Department does not accept intern");
+            throw new EmployeeException("Department does not accept intern",HttpStatus.BAD_REQUEST);
 
         //Validate salary
         validateSalary(employeeRequestDto);
@@ -104,14 +105,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void updateSpecificEmployeeData(Long id, EmployeePatchRequestDto employeePatchRequestDto) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
+                .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
         if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.departmentId() == null
                 && employeePatchRequestDto.active() == null)
-            throw new InvalidPatchRequestBodyException("Only departmentId, salary or " +
-                    "active fields can be passed in request body");
+            throw new InvalidEmployeePatchRequestBodyException("Only departmentId, salary or " +
+                    "active fields can be passed in request body", HttpStatus.BAD_REQUEST);
 
         if(employeePatchRequestDto.salary() != null){
+            validateSalary(employeePatchRequestDto,employee.getIsAnIntern());
             employee.setSalary(employeePatchRequestDto.salary());
         }
 
@@ -129,7 +131,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void softDeleteEmployee(Long id) {
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
+                .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
         if(!employee.getActive())
             return;
@@ -141,10 +143,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void hardDeleteEmployee(Long id){
         Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
+                .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
         if(employee.getActive())
-            throw new InvalidActiveFieldException("Cannot hard delete an active employee");
+            throw new EmployeeException("Cannot hard delete an active employee",HttpStatus.BAD_REQUEST);
 
         employeeRepository.deleteById(id);
     }
@@ -157,10 +159,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
     private boolean validateInternAcceptance(EmployeeRequestDto employeeRequestDto, Department department){
-        if(employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern())
-            return false;
-
-        return true;
+        return employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern();
     }
 
     private void validateSalary(EmployeeRequestDto employeeRequestDto){
@@ -169,9 +168,21 @@ public class EmployeeServiceImpl implements EmployeeService {
         BigDecimal minimumNonInternSalary = new BigDecimal(30_000);
 
         if(employeeRequestDto.isAnIntern() && employeeSalary.compareTo(minimumInternSalary) < 0)
-            throw new InsufficientSalaryException("Minimum intern salary is 15,000");
+            throw new EmployeeException("Minimum intern salary is 15,000", HttpStatus.BAD_REQUEST);
 
         if(!employeeRequestDto.isAnIntern() && employeeSalary.compareTo(minimumNonInternSalary) < 0)
-            throw new InsufficientSalaryException("Minimum non intern salary is 30,000");
+            throw new EmployeeException("Minimum non intern salary is 30,000",HttpStatus.BAD_REQUEST);
+    }
+
+    private void validateSalary(EmployeePatchRequestDto employeePatchRequestDto, boolean isAnIntern){
+        BigDecimal employeeSalary = employeePatchRequestDto.salary();
+        BigDecimal minimumInternSalary = new BigDecimal(15_000);
+        BigDecimal minimumNonInternSalary = new BigDecimal(30_000);
+
+        if(isAnIntern && employeeSalary.compareTo(minimumInternSalary) < 0)
+            throw new EmployeeException("Minimum intern salary is 15,000", HttpStatus.BAD_REQUEST);
+
+        if(!isAnIntern && employeeSalary.compareTo(minimumNonInternSalary) < 0)
+            throw new EmployeeException("Minimum non intern salary is 30,000",HttpStatus.BAD_REQUEST);
     }
 }
