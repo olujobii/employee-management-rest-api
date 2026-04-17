@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.employee.dto;
+package com.olujobii.employeerestapi.employee.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;

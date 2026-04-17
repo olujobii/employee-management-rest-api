@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.employee.dto;
+package com.olujobii.employeerestapi.employee.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.department.dto;
+package com.olujobii.employeerestapi.department.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

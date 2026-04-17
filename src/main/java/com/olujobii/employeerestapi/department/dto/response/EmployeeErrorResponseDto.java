@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.employee.dto;
+package com.olujobii.employeerestapi.department.dto.response;
 
 import org.springframework.http.HttpStatus;
 

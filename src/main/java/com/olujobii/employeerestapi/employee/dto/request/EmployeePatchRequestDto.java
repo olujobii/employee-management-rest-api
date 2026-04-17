@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.employee.dto;
+package com.olujobii.employeerestapi.employee.dto.request;
 
 import java.math.BigDecimal;
 
