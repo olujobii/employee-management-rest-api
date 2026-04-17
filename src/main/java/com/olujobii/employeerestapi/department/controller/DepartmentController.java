@@ -1,12 +1,11 @@
 package com.olujobii.employeerestapi.department.controller;
 
-import com.olujobii.employeerestapi.department.dto.DepartmentRequestDto;
+import com.olujobii.employeerestapi.department.dto.request.DepartmentRequestDto;
 import com.olujobii.employeerestapi.department.entity.Department;
 import com.olujobii.employeerestapi.department.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

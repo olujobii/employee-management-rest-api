@@ -1,6 +1,6 @@
 package com.olujobii.employeerestapi.employee.mapper;
 
-import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

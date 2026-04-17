@@ -1,7 +1,7 @@
 package com.olujobii.employeerestapi.employee.mapper;
 
 import com.olujobii.employeerestapi.department.entity.Department;
-import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.entity.Employee;
 
 public class EmployeeMapper {

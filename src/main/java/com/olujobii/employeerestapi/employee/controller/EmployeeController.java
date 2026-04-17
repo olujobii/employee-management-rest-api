@@ -1,14 +1,16 @@
 package com.olujobii.employeerestapi.employee.controller;
 
-import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -57,5 +59,11 @@ public class EmployeeController {
     public ResponseEntity<Void> hardDeleteEmployee(@PathVariable Long id){
         employeeService.hardDeleteEmployee(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> importEmployeeData(@RequestParam("file")MultipartFile file){
+        employeeService.importEmployeeData(file);
+        return ResponseEntity.status(200).body("Successful");
     }
 }
