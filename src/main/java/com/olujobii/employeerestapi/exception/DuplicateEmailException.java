@@ -1,7 +1,9 @@
 package com.olujobii.employeerestapi.exception;
 
-public class DuplicateEmailException extends RuntimeException {
-    public DuplicateEmailException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class DuplicateEmailException extends EmployeeException {
+    public DuplicateEmailException(String message, HttpStatus httpStatus) {
+        super(message, httpStatus);
     }
 }

@@ -1,5 +1,6 @@
 package com.olujobii.employeerestapi.exception;
 
+import com.olujobii.employeerestapi.department.dto.response.DepartmentErrorResponseDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeErrorResponseDto;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,34 +15,28 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<EmployeeErrorResponseDto> handleDuplicateEmailException(DuplicateEmailException ex){
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                new EmployeeErrorResponseDto(HttpStatus.CONFLICT,ex.getMessage(), LocalDateTime.now())
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                new EmployeeErrorResponseDto(ex.getHttpStatus(),ex.getMessage(), LocalDateTime.now())
         );
     }
 
-    @ExceptionHandler(InsufficientSalaryException.class)
-    public ResponseEntity<EmployeeErrorResponseDto> handleInvalidSalaryException(InsufficientSalaryException ex){
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new EmployeeErrorResponseDto(HttpStatus.BAD_REQUEST,ex.getMessage(), LocalDateTime.now())
+    @ExceptionHandler(EmployeeException.class)
+    public ResponseEntity<EmployeeErrorResponseDto> handleEmployeeException(EmployeeException ex){
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                new EmployeeErrorResponseDto(ex.getHttpStatus(),ex.getMessage(), LocalDateTime.now())
         );
     }
 
     @ExceptionHandler(EmployeeNotFoundException.class)
     public ResponseEntity<EmployeeErrorResponseDto> handleEmployeeNotFoundException(EmployeeNotFoundException ex){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new EmployeeErrorResponseDto(HttpStatus.NOT_FOUND,ex.getMessage(),LocalDateTime.now()));
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                new EmployeeErrorResponseDto(ex.getHttpStatus(),ex.getMessage(),LocalDateTime.now()));
     }
 
-    @ExceptionHandler(InvalidActiveFieldException.class)
-    public ResponseEntity<EmployeeErrorResponseDto> handleInvalidActiveFieldException(InvalidActiveFieldException ex){
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new EmployeeErrorResponseDto(HttpStatus.BAD_REQUEST,ex.getMessage(),LocalDateTime.now()));
-    }
-
-    @ExceptionHandler(InvalidPatchRequestBodyException.class)
-    public ResponseEntity<EmployeeErrorResponseDto> invalidPatchRequestBody(InvalidPatchRequestBodyException ex){
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                new EmployeeErrorResponseDto(HttpStatus.BAD_REQUEST,ex.getMessage(),LocalDateTime.now())
+    @ExceptionHandler(InvalidEmployeePatchRequestBodyException.class)
+    public ResponseEntity<EmployeeErrorResponseDto> handleInvalidPatchRequestBody(InvalidEmployeePatchRequestBodyException ex){
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                new EmployeeErrorResponseDto(ex.getHttpStatus(),ex.getMessage(),LocalDateTime.now())
         );
     }
 
@@ -53,14 +48,20 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DepartmentNotFoundException.class)
-    public ResponseEntity<com.olujobii.employeerestapi.department.dto.response.EmployeeErrorResponseDto> handleEmployeeNotFoundException(DepartmentNotFoundException ex){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new com.olujobii.employeerestapi.department.dto.response.EmployeeErrorResponseDto(HttpStatus.NOT_FOUND,
+    public ResponseEntity<EmployeeErrorResponseDto> handleEmployeeNotFoundException(DepartmentNotFoundException ex){
+        return ResponseEntity.status(ex.getHttpStatus()).body(new EmployeeErrorResponseDto(ex.getHttpStatus(),
                 ex.getMessage(), LocalDateTime.now()));
     }
 
     @ExceptionHandler(DuplicateDepartmentException.class)
-    public ResponseEntity<com.olujobii.employeerestapi.department.dto.response.EmployeeErrorResponseDto> handleDuplicateDepartmentException(DuplicateDepartmentException ex){
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new com.olujobii.employeerestapi.department.dto.response.EmployeeErrorResponseDto(HttpStatus.CONFLICT,
+    public ResponseEntity<DepartmentErrorResponseDto> handleDuplicateDepartmentException(DuplicateDepartmentException ex){
+        return ResponseEntity.status(ex.getHttpStatus()).body(new DepartmentErrorResponseDto(ex.getHttpStatus(),
                 ex.getMessage(), LocalDateTime.now()));
+    }
+
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<DepartmentErrorResponseDto> handleDepartmentNotFoundException(DepartmentException ex){
+        return ResponseEntity.status(ex.getHttpStatus()).body(new DepartmentErrorResponseDto(ex.getHttpStatus(),
+                ex.getMessage(),LocalDateTime.now()));
     }
 }

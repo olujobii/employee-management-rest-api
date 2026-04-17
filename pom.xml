@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.olujobii</groupId>
-    <artifactId>EmployeeRESTAPI</artifactId>
+    <artifactId>EmployeeManagementRESTAPI</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>EmployeeRESTAPI</name>
     <description>EmployeeRESTAPI</description>
