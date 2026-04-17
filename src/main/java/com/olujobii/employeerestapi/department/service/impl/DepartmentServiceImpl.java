@@ -23,7 +23,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void createDepartment(@Valid DepartmentRequestDto departmentRequestDto){
         departmentRepository.findByDepartmentName(departmentRequestDto.departmentName())
                 .ifPresent(department -> {
-                    throw new DuplicateDepartmentException("Department already exist");
+                    throw new DuplicateDepartmentException("Department already exist", HttpStatus.CONFLICT);
                 });
 
         Department department = Department.builder()
