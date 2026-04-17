@@ -1,4 +1,4 @@
-package com.olujobii.employeerestapi.employee.exception;
+package com.olujobii.employeerestapi.exception;
 
 public class EmployeeNotFoundException extends RuntimeException {
     public EmployeeNotFoundException(String message) {
