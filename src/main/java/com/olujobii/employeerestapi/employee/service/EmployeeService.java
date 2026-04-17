@@ -1,9 +1,10 @@
 package com.olujobii.employeerestapi.employee.service;
 
-import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import jakarta.validation.Valid;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface EmployeeService {
     void softDeleteEmployee(Long id);
 
     void hardDeleteEmployee(Long id);
+
+    void importEmployeeData(MultipartFile file);
 }
