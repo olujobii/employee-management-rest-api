@@ -2,7 +2,6 @@ package com.olujobii.employeerestapi.employee.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public record EmployeeResponseDto(Long id,
                                   String firstName,
@@ -11,5 +10,6 @@ public record EmployeeResponseDto(Long id,
                                   String department,
                                   BigDecimal salary,
                                   LocalDate dateOfJoining,
-                                  boolean active) {
+                                  Boolean active,
+                                  Boolean isAnIntern) {
 }

@@ -1,15 +1,16 @@
 package com.olujobii.employeerestapi.employee.service.impl;
 
+import com.olujobii.employeerestapi.department.entity.Department;
+import com.olujobii.employeerestapi.department.service.DepartmentService;
 import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
 import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
 import com.olujobii.employeerestapi.employee.entity.Employee;
-import com.olujobii.employeerestapi.employee.exception.*;
-import com.olujobii.employeerestapi.employee.exception.*;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeMapper;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeResponseMapper;
 import com.olujobii.employeerestapi.employee.repository.EmployeeRepository;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
+import com.olujobii.employeerestapi.exception.*;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,32 +23,37 @@ import java.util.List;
 @AllArgsConstructor
 @Validated
 public class EmployeeServiceImpl implements EmployeeService {
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
+    private final DepartmentService departmentService;
 
     @Override
     public void createEmployee(@Valid EmployeeRequestDto employeeRequestDto){
-        //Check if employee ID exists
         employeeRepository.findByEmail(employeeRequestDto.email().trim().toLowerCase())
                 .ifPresent(employee -> {
                     throw new DuplicateEmailException("Email already exists");
                 });
 
+        //Checking if department exists and if department accepts intern
+        Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
+
+        if(!validateInternAcceptance(employeeRequestDto,department))
+            throw new RuntimeException("Department does not accept intern");
+
+        //Validation salary cap for interns and non-interns
         validateSalary(employeeRequestDto);
 
         //Map Request DTO to employee data
-        Employee employee = EmployeeMapper.toEmployeeEntity(employeeRequestDto);
+        Employee employee = EmployeeMapper.toEmployeeEntity(employeeRequestDto,department);
 
         employeeRepository.save(employee);
     }
 
     @Override
     public List<EmployeeResponseDto> getEmployees(){
-        List<Employee> employees = employeeRepository.findAll();
-
-        //Map employees to EmployeeResponseDto and returning list of EmployeeResponseDto object
-        return employees.stream().map(employee -> EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
-                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment(),employee.getSalary(),
-                employee.getDateOfJoining(),employee.getActive())
+        //Find all Employees, Map employees to EmployeeResponseDto and returning list of EmployeeResponseDto object
+        return employeeRepository.findAll().stream().map(employee -> EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
+                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
+                employee.getDateOfJoining(),employee.getActive(),employee.getIsAnIntern())
         ).toList();
     }
 
@@ -60,8 +66,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                 });
 
         return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
-                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment(),employee.getSalary(),
-                employee.getDateOfJoining(),employee.getActive());
+                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
+                employee.getDateOfJoining(),employee.getActive(),employee.getIsAnIntern());
     }
 
     @Override
@@ -80,13 +86,23 @@ public class EmployeeServiceImpl implements EmployeeService {
                             throw new DuplicateEmailException("Email already exist");
                         });
 
+        //Check if department exists and if department accepts intern
+        Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
+
+        if(!validateInternAcceptance(employeeRequestDto,department))
+            throw new RuntimeException("Department does not accept intern");
+
+        //Validate salary
+        validateSalary(employeeRequestDto);
+
         employee.setFirstName(employeeRequestDto.firstName().trim());
         employee.setLastName(employeeRequestDto.lastName().trim());
-        employee.setDepartment(employeeRequestDto.department().trim().toUpperCase());
+        employee.setDepartment(department);
         employee.setEmail(employeeRequestDto.email().trim().toLowerCase());
         employee.setSalary(employeeRequestDto.salary());
         employee.setDateOfJoining(employeeRequestDto.dateOfJoining());
         employee.setActive(employeeRequestDto.active());
+        employee.setIsAnIntern(employeeRequestDto.isAnIntern());
 
         employeeRepository.save(employee);
     }
@@ -99,16 +115,19 @@ public class EmployeeServiceImpl implements EmployeeService {
                     throw new EmployeeNotFoundException("Employee does not exist");
                 });
 
-        if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.department() == null
+        if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.departmentId() == null
                 && employeePatchRequestDto.active() == null)
-            throw new InvalidPatchRequestBodyException("Only department, salary or " +
+            throw new InvalidPatchRequestBodyException("Only departmentId, salary or " +
                     "active fields can be passed in request body");
 
-        if(employeePatchRequestDto.salary() != null)
+        if(employeePatchRequestDto.salary() != null){
             employee.setSalary(employeePatchRequestDto.salary());
+        }
 
-        if(employeePatchRequestDto.department() != null)
-            employee.setDepartment(employeePatchRequestDto.department().trim().toUpperCase());
+        if(employeePatchRequestDto.departmentId() != null){
+            Department department = departmentService.getDepartmentById(employeePatchRequestDto.departmentId());
+            employee.setDepartment(department);
+        }
 
         if(employeePatchRequestDto.active() != null)
             employee.setActive(employeePatchRequestDto.active());
@@ -142,16 +161,23 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(id);
     }
 
+    //TODO: Add to updateEmployeeData(In case status is changed to employee is an intern in the future)
+    private boolean validateInternAcceptance(EmployeeRequestDto employeeRequestDto, Department department){
+        if(employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern())
+            return false;
+
+        return true;
+    }
+
     private void validateSalary(EmployeeRequestDto employeeRequestDto){
-        String employeeDepartment = employeeRequestDto.department().trim();
         BigDecimal employeeSalary = employeeRequestDto.salary();
-        BigDecimal salaryForIntern = new BigDecimal("15000.00");
-        BigDecimal salaryForOtherDepartment = new BigDecimal("30000.00");
+        BigDecimal minimumInternSalary = new BigDecimal(15_000);
+        BigDecimal minimumNonInternSalary = new BigDecimal(30_000);
 
-        if(employeeDepartment.trim().equalsIgnoreCase("intern") && employeeSalary.compareTo(salaryForIntern) < 0)
-            throw new InvalidSalaryException("Intern salary cannot be less than 15,000");
+        if(employeeRequestDto.isAnIntern() && employeeSalary.compareTo(minimumInternSalary) < 0)
+            throw new InsufficientSalaryException("Minimum intern salary is 15,000");
 
-        if(!employeeDepartment.trim().equalsIgnoreCase("intern") &&  employeeSalary.compareTo(salaryForOtherDepartment) < 0)
-            throw new InvalidSalaryException("Employee salary cannot be less than 30,000");
+        if(!employeeRequestDto.isAnIntern() && employeeSalary.compareTo(minimumNonInternSalary) < 0)
+            throw new InsufficientSalaryException("Minimum non intern salary is 30,000");
     }
 }
