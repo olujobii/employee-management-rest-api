@@ -2,9 +2,9 @@ package com.olujobii.employeerestapi.employee.service.impl;
 
 import com.olujobii.employeerestapi.department.entity.Department;
 import com.olujobii.employeerestapi.department.service.DepartmentService;
-import com.olujobii.employeerestapi.employee.dto.EmployeePatchRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeRequestDto;
-import com.olujobii.employeerestapi.employee.dto.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
+import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
+import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import com.olujobii.employeerestapi.employee.entity.Employee;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeMapper;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeResponseMapper;
@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,10 +61,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponseDto getEmployeeById(Long id){
         Employee employee = employeeRepository.findById(id)
-                //FIXME: Saying Throwable Supplier does not return any exception
-                .orElseThrow(() -> {
-                    throw new EmployeeNotFoundException("Employee does not exist");
-                });
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
 
         return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
                 employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
@@ -73,16 +71,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void updateEmployeeData(Long id,@Valid EmployeeRequestDto employeeRequestDto) {
         Employee employee = employeeRepository.findById(id)
-                //FIXME: Saying Throwable Supplier does not return any exception
-                .orElseThrow(() -> {
-                    throw new EmployeeNotFoundException("Employee does not exist");
-                });
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
 
         //Check if email exists and skip the id of the current record I want to update
         employeeRepository.findByEmailWhereIdIsNotEqualTo(id,
                 employeeRequestDto.email().trim().toLowerCase())
                         .ifPresent(emp -> {
-                            //FIXME: Saying Throwable Supplier does not return any exception
                             throw new DuplicateEmailException("Email already exist");
                         });
 
@@ -110,10 +104,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void updateSpecificEmployeeData(Long id, EmployeePatchRequestDto employeePatchRequestDto) {
         Employee employee = employeeRepository.findById(id)
-                //FIXME: Saying Throwable Supplier does not return any exception
-                .orElseThrow(() -> {
-                    throw new EmployeeNotFoundException("Employee does not exist");
-                });
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
 
         if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.departmentId() == null
                 && employeePatchRequestDto.active() == null)
@@ -137,10 +128,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void softDeleteEmployee(Long id) {
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> {
-            //FIXME: Saying Throwable Supplier does not return any exception
-            throw new EmployeeNotFoundException("Employee does not exist");
-        });
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
 
         if(!employee.getActive())
             return;
@@ -151,9 +140,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void hardDeleteEmployee(Long id){
-        Employee employee = employeeRepository.findById(id).orElseThrow(() -> {
-            throw new EmployeeNotFoundException("Employee does not exist");
-        });
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee does not exist"));
 
         if(employee.getActive())
             throw new InvalidActiveFieldException("Cannot hard delete an active employee");
@@ -161,7 +149,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(id);
     }
 
-    //TODO: Add to updateEmployeeData(In case status is changed to employee is an intern in the future)
+    @Override
+    public void importEmployeeData(MultipartFile file) {
+        String fileName = file.getName();
+        System.out.println(file);
+    }
+
+
     private boolean validateInternAcceptance(EmployeeRequestDto employeeRequestDto, Department department){
         if(employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern())
             return false;

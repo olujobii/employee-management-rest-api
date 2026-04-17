@@ -1,6 +1,6 @@
 package com.olujobii.employeerestapi.department.service.impl;
 
-import com.olujobii.employeerestapi.department.dto.DepartmentRequestDto;
+import com.olujobii.employeerestapi.department.dto.request.DepartmentRequestDto;
 import com.olujobii.employeerestapi.department.entity.Department;
 import com.olujobii.employeerestapi.exception.DepartmentNotFoundException;
 import com.olujobii.employeerestapi.exception.DuplicateDepartmentException;
@@ -37,16 +37,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public Department getDepartmentById(Long id) {
         return departmentRepository.findById(id)
-                .orElseThrow(() -> {
-                    throw new DepartmentNotFoundException(id, HttpStatus.NOT_FOUND);
-                });
+                .orElseThrow(() -> new DepartmentNotFoundException(id, HttpStatus.NOT_FOUND));
     }
 
     @Override
     public void deleteDepartment(Long id) {
-        departmentRepository.findById(id).orElseThrow(() -> {
-            throw new DepartmentNotFoundException(id, HttpStatus.NOT_FOUND);
-        });
+        departmentRepository.findById(id).orElseThrow(() -> new DepartmentNotFoundException(id, HttpStatus.NOT_FOUND));
 
         departmentRepository.deleteById(id);
     }
