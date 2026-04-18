@@ -72,14 +72,14 @@ public class Employee {
     }
 
     @PrePersist
-    public void onCreated(){
+    private void onCreated(){
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
     }
 
     @PreUpdate
-    public void onUpdated(){
+    private void onUpdate(){
         this.updatedAt = LocalDateTime.now();
     }
 }

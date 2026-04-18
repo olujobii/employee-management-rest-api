@@ -40,14 +40,14 @@ public class Department {
     }
 
     @PrePersist
-    public void onCreate(){
+    private void onCreate(){
         LocalDateTime now = LocalDateTime.now();
         createdAt = now;
         updatedAt = now;
     }
 
     @PreUpdate
-    public void onUpdate(){
+    private void onUpdate(){
         updatedAt = LocalDateTime.now();
     }
 }
