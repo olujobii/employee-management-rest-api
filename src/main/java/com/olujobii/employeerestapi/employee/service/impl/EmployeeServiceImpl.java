@@ -36,9 +36,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                 });
 
         //Checking if department exists
-        Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
+        Department department = departmentService.searchDepartmentById(employeeRequestDto.departmentId());
 
-        if(!validateInternAcceptance(employeeRequestDto,department))
+        if(validateInternAcceptance(employeeRequestDto,department))
             throw new EmployeeException("Department is not currently accepting interns", HttpStatus.BAD_REQUEST);
 
         //Validation salary cap for interns and non-interns
@@ -82,9 +82,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                         });
 
         //Check if department exists
-        Department department = departmentService.getDepartmentById(employeeRequestDto.departmentId());
+        Department department = departmentService.searchDepartmentById(employeeRequestDto.departmentId());
 
-        if(!validateInternAcceptance(employeeRequestDto,department))
+        if(validateInternAcceptance(employeeRequestDto,department))
             throw new EmployeeException("Department does not accept intern",HttpStatus.BAD_REQUEST);
 
         //Validate salary
@@ -118,7 +118,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         if(employeePatchRequestDto.departmentId() != null){
-            Department department = departmentService.getDepartmentById(employeePatchRequestDto.departmentId());
+            Department department = departmentService.searchDepartmentById(employeePatchRequestDto.departmentId());
             employee.setDepartment(department);
         }
 
