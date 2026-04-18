@@ -1,7 +1,7 @@
 package com.olujobii.employeerestapi.department.controller;
 
 import com.olujobii.employeerestapi.department.dto.request.DepartmentRequestDto;
-import com.olujobii.employeerestapi.department.entity.Department;
+import com.olujobii.employeerestapi.department.dto.response.DepartmentResponseDto;
 import com.olujobii.employeerestapi.department.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -24,7 +24,7 @@ class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id){
+    public ResponseEntity<DepartmentResponseDto> getDepartmentById(@PathVariable Long id){
         return ResponseEntity.status(HttpStatus.OK).body(departmentService.getDepartmentById(id));
     }
 
