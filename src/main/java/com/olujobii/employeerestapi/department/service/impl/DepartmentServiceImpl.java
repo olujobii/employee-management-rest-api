@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 @Validated
@@ -22,7 +24,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public void createDepartment(@Valid DepartmentRequestDto departmentRequestDto){
-        departmentRepository.findByDepartmentName(departmentRequestDto.departmentName())
+        departmentRepository.findByDepartmentName(departmentRequestDto.departmentName().trim())
                 .ifPresent(department -> {
                     throw new DuplicateDepartmentException("Department already exist", HttpStatus.CONFLICT);
                 });
@@ -54,5 +56,30 @@ public class DepartmentServiceImpl implements DepartmentService {
         departmentRepository.findById(id).orElseThrow(() -> new DepartmentNotFoundException(id, HttpStatus.NOT_FOUND));
 
         departmentRepository.deleteById(id);
+    }
+
+    @Override
+    public List<DepartmentResponseDto> getDepartments() {
+        return departmentRepository.findAll().stream()
+                .map(dep -> new DepartmentResponseDto(dep.getDepartmentId(),dep.getDepartmentName(),dep.getIsAcceptingIntern()))
+                .toList();
+    }
+
+    @Override
+    public void updateDepartment(@Valid DepartmentRequestDto departmentRequestDto,Long id) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new DepartmentNotFoundException(id,HttpStatus.NOT_FOUND));
+
+        //Check if another record has the department name
+        departmentRepository.findByDepartmentNameWhereIdNotEqualTo(id, departmentRequestDto.departmentName().trim())
+                .ifPresent(dep -> {
+                    throw new DuplicateDepartmentException("Department already exists",HttpStatus.CONFLICT);
+                });
+
+        //Update record
+        department.setDepartmentName(departmentRequestDto.departmentName().trim());
+        department.setIsAcceptingIntern(departmentRequestDto.isAcceptingIntern());
+
+        departmentRepository.save(department);
     }
 }

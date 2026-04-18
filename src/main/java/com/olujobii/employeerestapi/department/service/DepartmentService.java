@@ -5,6 +5,8 @@ import com.olujobii.employeerestapi.department.dto.response.DepartmentResponseDt
 import com.olujobii.employeerestapi.department.entity.Department;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 public interface DepartmentService {
 
     void createDepartment(@Valid DepartmentRequestDto departmentRequestDto);
@@ -14,4 +16,8 @@ public interface DepartmentService {
     Department searchDepartmentById(Long id);
 
     void deleteDepartment(Long id);
+
+    List<DepartmentResponseDto> getDepartments();
+
+    void updateDepartment(@Valid  DepartmentRequestDto departmentRequestDto,Long id);
 }
