@@ -1,13 +1,12 @@
 package com.olujobii.employeerestapi.department.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -27,9 +26,28 @@ public class Department {
     @NotNull
     private Boolean isAcceptingIntern;
 
+    @NotNull
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @NotNull
+    private LocalDateTime updatedAt;
+
     @Builder
     private Department(String departmentName, Boolean isAcceptingIntern){
         this.departmentName = departmentName;
         this.isAcceptingIntern = isAcceptingIntern;
+    }
+
+    @PrePersist
+    public void onCreate(){
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    public void onUpdate(){
+        updatedAt = LocalDateTime.now();
     }
 }

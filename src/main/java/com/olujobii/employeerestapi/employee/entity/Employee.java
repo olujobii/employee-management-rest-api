@@ -56,6 +56,7 @@ public class Employee {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    @NotNull
     private LocalDateTime updatedAt;
 
     @Builder
