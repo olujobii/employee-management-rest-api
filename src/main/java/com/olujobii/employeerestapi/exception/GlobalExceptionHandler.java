@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(), LocalDateTime.now()));
     }
 
-    @ExceptionHandler(DepartmentNotFoundException.class)
+    @ExceptionHandler(DepartmentException.class)
     public ResponseEntity<DepartmentErrorResponseDto> handleDepartmentNotFoundException(DepartmentException ex){
         return ResponseEntity.status(ex.getHttpStatus()).body(new DepartmentErrorResponseDto(ex.getHttpStatus(),
                 ex.getMessage(),LocalDateTime.now()));
