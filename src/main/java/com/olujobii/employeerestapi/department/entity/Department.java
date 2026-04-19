@@ -21,6 +21,7 @@ public class Department {
 
     @NotBlank
     @Size(max = 100)
+    @Column(unique = true)
     private String departmentName;
 
     @NotNull
