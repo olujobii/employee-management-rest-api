@@ -3,7 +3,7 @@ spring:
     name: EmployeeManagementRESTAPI
 
   datasource:
-    url: jdbc:h2:mem:employeedb;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:employeedb;DB_CLOSE_DELAY=-1;IGNORECASE=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:

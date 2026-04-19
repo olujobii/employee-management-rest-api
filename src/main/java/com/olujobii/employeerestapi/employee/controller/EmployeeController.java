@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -62,7 +63,7 @@ public class EmployeeController {
     }
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> importEmployeeData(@RequestParam("file")MultipartFile file){
+    public ResponseEntity<String> importEmployeeData(@RequestParam("file")MultipartFile file) throws IOException {
         employeeService.importEmployeeData(file);
         return ResponseEntity.status(200).body("Successful");
     }

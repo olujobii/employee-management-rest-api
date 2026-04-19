@@ -12,14 +12,19 @@ import com.olujobii.employeerestapi.employee.repository.EmployeeRepository;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import com.olujobii.employeerestapi.exception.*;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -36,7 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 });
 
         //Checking if department exists
-        Department department = departmentService.searchDepartmentById(employeeRequestDto.departmentId());
+        Department department = departmentService.searchDepartmentByName(employeeRequestDto.departmentName().trim());
 
         if(validateInternAcceptance(employeeRequestDto,department))
             throw new EmployeeException("Department is not currently accepting interns", HttpStatus.BAD_REQUEST);
@@ -82,7 +87,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                         });
 
         //Check if department exists
-        Department department = departmentService.searchDepartmentById(employeeRequestDto.departmentId());
+        Department department = departmentService.searchDepartmentByName(employeeRequestDto.departmentName().trim());
 
         if(validateInternAcceptance(employeeRequestDto,department))
             throw new EmployeeException("Department does not accept intern",HttpStatus.BAD_REQUEST);
@@ -107,7 +112,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
-        if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.departmentId() == null
+        if(employeePatchRequestDto.salary() == null && employeePatchRequestDto.departmentName() == null
                 && employeePatchRequestDto.active() == null)
             throw new InvalidEmployeePatchRequestBodyException("Only departmentId, salary or " +
                     "active fields can be passed in request body", HttpStatus.BAD_REQUEST);
@@ -117,8 +122,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setSalary(employeePatchRequestDto.salary());
         }
 
-        if(employeePatchRequestDto.departmentId() != null){
-            Department department = departmentService.searchDepartmentById(employeePatchRequestDto.departmentId());
+        if(employeePatchRequestDto.departmentName() != null){
+            Department department = departmentService.searchDepartmentByName(employeePatchRequestDto.departmentName().trim());
             employee.setDepartment(department);
         }
 
@@ -152,11 +157,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void importEmployeeData(MultipartFile file) {
-        String fileName = file.getName();
-        System.out.println(file);
-    }
+    public void importEmployeeData(MultipartFile file) throws IOException {
+        try(InputStream inputStream = file.getInputStream();
+            Workbook workbook = new XSSFWorkbook(inputStream)){
+            Sheet sheet = workbook.getSheetAt(0);
 
+            //Dynamically map through the header to know what column it is and store the right data to the appropriate field.
+            Map<String, Integer> headerRowMap = new HashMap<>();
+            sheet.getRow(0).forEach(cell -> {
+                String headerColumnName = cell.getStringCellValue().trim().toLowerCase();
+                headerRowMap.put(headerColumnName,cell.getColumnIndex());
+            });
+        }
+    }
 
     private boolean validateInternAcceptance(EmployeeRequestDto employeeRequestDto, Department department){
         return employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern();
@@ -184,5 +197,21 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         if(!isAnIntern && employeeSalary.compareTo(minimumNonInternSalary) < 0)
             throw new EmployeeException("Minimum non intern salary is 30,000",HttpStatus.BAD_REQUEST);
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    private static class EmployeeExcelRequestDto{
+        String firstName;
+        String lastName;
+        String email;
+        Long departmentId;
+        BigDecimal salary;
+        LocalDate dateOfJoining;
+        Boolean isActive;
+        Boolean isAnIntern;
     }
 }

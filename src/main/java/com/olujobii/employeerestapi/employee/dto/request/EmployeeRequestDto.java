@@ -8,19 +8,20 @@ import java.time.LocalDate;
 
 public record EmployeeRequestDto(
     @NotBlank(message = "firstName is required")
-    @Size(max = 50, message = "firstName must be between 1 and 50 characters")
+    @Size(min = 2, max = 50, message = "firstName must be between 2 and 50 characters")
     String firstName,
 
     @NotBlank(message = "lastName is required")
-    @Size(max = 50, message = "lastName must be between 1 and 50 characters")
+    @Size(min = 2, max = 50, message = "lastName must be between 1 and 50 characters")
     String lastName,
 
     @NotBlank(message = "email is required")
     @Email
     String email,
 
-    @NotNull(message = "departmentId is required")
-    Long departmentId,
+    @NotBlank(message = "departmentId is required")
+    @Size(min = 2, max = 100, message = "departmentName must be between 2 and 100 characters")
+    String departmentName,
 
     @NotNull(message = "salary is a required field")
     @DecimalMin("0.00")

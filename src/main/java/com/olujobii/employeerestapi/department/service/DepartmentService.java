@@ -13,7 +13,7 @@ public interface DepartmentService {
 
     DepartmentResponseDto getDepartmentById(Long id);
 
-    Department searchDepartmentById(Long id);
+    Department searchDepartmentByName(String departmentName);
 
     void deleteDepartment(Long id);
 

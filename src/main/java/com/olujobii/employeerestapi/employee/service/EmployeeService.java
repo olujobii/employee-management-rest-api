@@ -6,6 +6,7 @@ import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -24,5 +25,5 @@ public interface EmployeeService {
 
     void hardDeleteEmployee(Long id);
 
-    void importEmployeeData(MultipartFile file);
+    void importEmployeeData(MultipartFile file) throws IOException;
 }
