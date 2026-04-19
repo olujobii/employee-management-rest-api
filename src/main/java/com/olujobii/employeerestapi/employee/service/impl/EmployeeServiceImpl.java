@@ -5,6 +5,7 @@ import com.olujobii.employeerestapi.department.service.DepartmentService;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.response.ImportResultDto;
 import com.olujobii.employeerestapi.employee.entity.Employee;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeMapper;
 import com.olujobii.employeerestapi.employee.mapper.EmployeeResponseMapper;
@@ -12,6 +13,7 @@ import com.olujobii.employeerestapi.employee.repository.EmployeeRepository;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import com.olujobii.employeerestapi.exception.*;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -32,6 +34,7 @@ import java.util.*;
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentService departmentService;
+    private final Validator validator;
 
     @Override
     public void createEmployee(@Valid EmployeeRequestDto employeeRequestDto){
@@ -157,19 +160,36 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void importEmployeeData(MultipartFile file) throws IOException {
+    public ImportResultDto importEmployeeData(MultipartFile file) throws IOException {
+        List<EmployeeExcelRequestDto> employeeExcelRequestDtoList;
+
         try(InputStream inputStream = file.getInputStream();
             Workbook workbook = new XSSFWorkbook(inputStream)){
             Sheet sheet = workbook.getSheetAt(0);
-
+            final int totalHeaderColumn = 8;
             //Dynamically map through the header to know what column it is and store the right data to the appropriate field.
             Map<String, Integer> headerRowMap = new HashMap<>();
             sheet.getRow(0).forEach(cell -> {
                 String headerColumnName = cell.getStringCellValue().trim().toLowerCase();
                 headerRowMap.put(headerColumnName,cell.getColumnIndex());
             });
+
+            //FIXME: Throw a custom exception here.
+            if(headerRowMap.size() != totalHeaderColumn)
+                throw new RuntimeException("The Excel file must have exactly 8 columns with these header names: ");
+
+            //Parsing Data
+            employeeExcelRequestDtoList = parsingExcelData(sheet,headerRowMap);
+            System.out.println(employeeExcelRequestDtoList);
         }
+
+        //Validating data
+        List<EmployeeRequestDto> employeeRequestDtoList = validatingExcelData(employeeExcelRequestDtoList);
+
+        //FIXME: Return correct data
+        return new ImportResultDto(1,1,1,null);
     }
+
 
     private boolean validateInternAcceptance(EmployeeRequestDto employeeRequestDto, Department department){
         return employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern();
@@ -199,6 +219,69 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new EmployeeException("Minimum non intern salary is 30,000",HttpStatus.BAD_REQUEST);
     }
 
+    private List<EmployeeExcelRequestDto> parsingExcelData(Sheet sheet, Map<String, Integer> headerRowMap) {
+        List<EmployeeExcelRequestDto> employeelist = new ArrayList<>();
+        sheet.forEach(row -> {
+            if(row.getRowNum() == 0)
+                return;
+
+            EmployeeExcelRequestDto empRequestDto = new EmployeeExcelRequestDto();
+            for(Map.Entry<String, Integer> entry : headerRowMap.entrySet()){
+
+                String headerName = entry.getKey();
+                Cell cell = row.getCell(entry.getValue(), Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+
+                if(cell == null)
+                    continue;
+
+                switch(headerName){
+                    case "first_name":
+                        if(cell.getCellType() == CellType.STRING)
+                            empRequestDto.setFirstName(cell.getStringCellValue().trim());
+                        break;
+                    case "last_name":
+                        if(cell.getCellType() == CellType.STRING)
+                            empRequestDto.setLastName(cell.getStringCellValue().trim());
+                        break;
+                    case "email":
+                        if(cell.getCellType() == CellType.STRING)
+                            empRequestDto.setEmail(cell.getStringCellValue().trim());
+                        break;
+                    case "department_name":
+                        if(cell.getCellType() == CellType.STRING)
+                            empRequestDto.setDepartmentName(cell.getStringCellValue().trim());
+                        break;
+                    case "salary":
+                        if(cell.getCellType() == CellType.NUMERIC)
+                            empRequestDto.setSalary(BigDecimal.valueOf(cell.getNumericCellValue()));
+                        break;
+                    case "date_of_joining":
+                        if(cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell))
+                            empRequestDto.setDateOfJoining(cell.getLocalDateTimeCellValue().toLocalDate());
+                        break;
+                    case "active":
+                        if(cell.getCellType() == CellType.BOOLEAN)
+                            empRequestDto.setIsActive(cell.getBooleanCellValue());
+                        break;
+                    case "is_an_intern":
+                        if(cell.getCellType() == CellType.BOOLEAN)
+                            empRequestDto.setIsAnIntern(cell.getBooleanCellValue());
+                        break;
+                    default:
+                        break;
+                }
+            }
+            employeelist.add(empRequestDto);
+        });
+
+        return employeelist;
+    }
+
+    private List<EmployeeRequestDto> validatingExcelData(List<EmployeeExcelRequestDto> employeeExcelRequestDtoList) {
+
+        return new ArrayList<>();
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -208,7 +291,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         String firstName;
         String lastName;
         String email;
-        Long departmentId;
+        String departmentName;
         BigDecimal salary;
         LocalDate dateOfJoining;
         Boolean isActive;

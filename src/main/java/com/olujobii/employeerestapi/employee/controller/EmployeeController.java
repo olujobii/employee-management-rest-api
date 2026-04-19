@@ -3,6 +3,7 @@ package com.olujobii.employeerestapi.employee.controller;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
+import com.olujobii.employeerestapi.employee.dto.response.ImportResultDto;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -64,7 +65,7 @@ public class EmployeeController {
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> importEmployeeData(@RequestParam("file")MultipartFile file) throws IOException {
-        employeeService.importEmployeeData(file);
+        ImportResultDto importResultDto = employeeService.importEmployeeData(file);
         return ResponseEntity.status(200).body("Successful");
     }
 }
