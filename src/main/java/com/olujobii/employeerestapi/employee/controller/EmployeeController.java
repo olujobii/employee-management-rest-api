@@ -5,6 +5,7 @@ import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import com.olujobii.employeerestapi.employee.dto.response.ImportResultDto;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
+import com.olujobii.employeerestapi.employee.service.EmployeeImportExportService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -21,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 public class EmployeeController {
     private final EmployeeService employeeService;
+    private final EmployeeImportExportService empImportExportService;
 
     @PostMapping
     public ResponseEntity<Void> createEmployee(@Valid @RequestBody EmployeeRequestDto employeeRequestDto){
@@ -63,9 +66,14 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @GetMapping("/salary-range")
+    public ResponseEntity<List<EmployeeResponseDto>> filterBySalaryRange(@RequestParam(name = "min")BigDecimal min, @RequestParam(name = "max") BigDecimal max){
+        return ResponseEntity.status(HttpStatus.OK).body(employeeService.filterBySalaryRange(min,max));
+    }
+
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> importEmployeeData(@RequestParam("file")MultipartFile file) throws IOException {
-        ImportResultDto importResultDto = employeeService.importEmployeeData(file);
+        ImportResultDto importResultDto = empImportExportService.importEmployeeData(file);
         return ResponseEntity.status(200).body("Successful");
     }
 }
