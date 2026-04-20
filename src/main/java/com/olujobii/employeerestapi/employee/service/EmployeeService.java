@@ -3,11 +3,9 @@ package com.olujobii.employeerestapi.employee.service;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto;
 import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
-import com.olujobii.employeerestapi.employee.dto.response.ImportResultDto;
 import jakarta.validation.Valid;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -26,5 +24,6 @@ public interface EmployeeService {
 
     void hardDeleteEmployee(Long id);
 
-    ImportResultDto importEmployeeData(MultipartFile file) throws IOException;
+    List<EmployeeResponseDto> filterBySalaryRange(BigDecimal min, BigDecimal max);
+
 }
