@@ -31,10 +31,13 @@ public class EmployeeController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // FIXME: Still going to add query params
     @GetMapping
-    public ResponseEntity<List<EmployeeResponseDto>> getEmployees(){
-        return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployees());
+    public ResponseEntity<List<EmployeeResponseDto>> getEmployees(@RequestParam(required = false ,defaultValue = "1") int pageNo,
+                                                                  @RequestParam(required = false, defaultValue = "5") int pageSize,
+                                                                  @RequestParam(required = false, defaultValue = "id") String sortBy,
+                                                                  @RequestParam(required = false, defaultValue = "asc") String sortDir,
+                                                                  @RequestParam(required = false) Boolean isActive){
+        return ResponseEntity.status(HttpStatus.OK).body(employeeService.getEmployees(pageNo, pageSize, sortBy, sortDir,isActive));
     }
 
     @GetMapping("/{id}")

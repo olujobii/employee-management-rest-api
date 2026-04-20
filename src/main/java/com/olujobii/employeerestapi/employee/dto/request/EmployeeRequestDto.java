@@ -32,7 +32,6 @@ public record EmployeeRequestDto(
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate dateOfJoining,
 
-    // TODO: Accept default value as true if user does not specify
     @NotNull(message = "active is a required field")
     Boolean active,
 

@@ -18,45 +18,53 @@ import java.time.LocalDateTime;
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
     private Long id;
 
     @NotBlank
     @Size(max = 50)
+    @Column(name = "first_name")
     private String firstName;
 
     @NotBlank
     @Size(max = 50)
+    @Column(name = "last_name")
     private String lastName;
 
     @NotBlank
     @Email
-    @Column(unique = true)
+    @Column(unique = true, name = "email")
     private String email;
 
     @ManyToOne
-    @JoinColumn(name = "department_id")
+    @JoinColumn(name = "department_name", referencedColumnName = "department_name")
     @NotNull(message = "department is required")
     private Department department;
 
     @NotNull
     @DecimalMin("0.00")
+    @Column(name = "salary")
     private BigDecimal salary;
 
     @NotNull
     @PastOrPresent
     @JsonFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "date_of_joining")
     private LocalDate dateOfJoining;
 
     @NotNull
+    @Column(name = "active")
     private Boolean active;
 
     @NotNull
+    @Column(name = "is_an_intern")
     private Boolean isAnIntern;
 
-    @Column(updatable = false)
+    @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
     @NotNull
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Builder

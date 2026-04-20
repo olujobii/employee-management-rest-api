@@ -17,21 +17,24 @@ public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "department_id")
     private Long departmentId;
 
     @NotBlank
     @Size(max = 100)
-    @Column(unique = true)
+    @Column(unique = true, name = "department_name", nullable = false)
     private String departmentName;
 
     @NotNull
+    @Column(name = "is_accepting_intern")
     private Boolean isAcceptingIntern;
 
     @NotNull
-    @Column(updatable = false)
+    @Column(updatable = false, name = "created_at")
     private LocalDateTime createdAt;
 
     @NotNull
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Builder

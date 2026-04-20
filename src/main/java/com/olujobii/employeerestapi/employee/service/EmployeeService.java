@@ -12,7 +12,7 @@ import java.util.List;
 public interface EmployeeService {
     void createEmployee(@Valid EmployeeRequestDto employeeRequestDto);
 
-    List<EmployeeResponseDto> getEmployees();
+    List<EmployeeResponseDto> getEmployees(int pageNo, int pageSize, String sortBy, String sortDir, Boolean isActive);
 
      EmployeeResponseDto getEmployeeById(Long id);
 

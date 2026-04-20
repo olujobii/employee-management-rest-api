@@ -6,14 +6,14 @@ import com.olujobii.employeerestapi.employee.dto.request.EmployeePatchRequestDto
 import com.olujobii.employeerestapi.employee.dto.request.EmployeeRequestDto;
 import com.olujobii.employeerestapi.employee.dto.response.EmployeeResponseDto;
 import com.olujobii.employeerestapi.employee.entity.Employee;
-import com.olujobii.employeerestapi.employee.mapper.EmployeeMapper;
-import com.olujobii.employeerestapi.employee.mapper.EmployeeResponseMapper;
 import com.olujobii.employeerestapi.employee.repository.EmployeeRepository;
 import com.olujobii.employeerestapi.employee.service.EmployeeService;
 import com.olujobii.employeerestapi.exception.*;
 import jakarta.validation.Valid;
 import lombok.*;
-import org.apache.poi.ss.usermodel.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -45,18 +45,62 @@ public class EmployeeServiceImpl implements EmployeeService {
         validateSalary(employeeRequestDto.salary(), employeeRequestDto.isAnIntern());
 
         //Map Request DTO to employee data
-        Employee employee = EmployeeMapper.toEmployeeEntity(employeeRequestDto,department);
+        Employee employee = mapToEmployeeEntity(employeeRequestDto,department);
 
         employeeRepository.save(employee);
     }
 
     @Override
-    public List<EmployeeResponseDto> getEmployees(){
-        //Find all Employees, Map employees to EmployeeResponseDto and returning list of EmployeeResponseDto object
-        return employeeRepository.findAll().stream().map(employee -> EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
-                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
-                employee.getDateOfJoining(),employee.getActive(),employee.getIsAnIntern())
-        ).toList();
+    public List<EmployeeResponseDto> getEmployees(int pageNo, int pageSize, String sortBy, String sortDir, Boolean isActive){
+        final int minimumPageNo = 1;
+        final int minimumPageSize = 5;
+        final String sortByField = sortBy.trim();
+        final String sortDirField = sortDir.trim().toUpperCase();
+
+        //check page size and page number is valid
+        if(pageNo < minimumPageNo) throw new EmployeeException("Invalid page number. Page number cannot be less than "+minimumPageNo, HttpStatus.BAD_REQUEST);
+
+        if(pageSize < minimumPageSize) throw new EmployeeException("Invalid page size. Page size cannot be less than "+minimumPageSize, HttpStatus.BAD_REQUEST);
+
+        final int pageNoIndex = pageNo - 1;
+
+        //SORTING LOGIC
+        //Check if sortByField and SortDirField is valid
+        if(isSortFieldNotValid(sortByField))
+            throw new EmployeeException("Invalid sorting field: "+ sortByField,HttpStatus.BAD_REQUEST);
+
+        if(isSortDirFieldNotValid(sortDirField))
+            throw new EmployeeException("Invalid sorting order: "+sortDirField,HttpStatus.BAD_REQUEST);
+
+
+        Sort sort = sortDirField.equals("ASC") ? Sort.by(sortByField).ascending() : Sort.by(sortByField).descending();
+
+        Pageable pageable = PageRequest.of(pageNoIndex,pageSize,sort);
+
+        //Filtering logic
+        if(isActive != null && !isActive.equals(true)){
+            throw new EmployeeException("You can only search for active employees",HttpStatus.BAD_REQUEST);
+        }
+
+        if(isActive != null)
+            return employeeRepository.findByActiveTrue(true,pageable).stream().map(this::mapToEmployeeResponseDto)
+                    .toList();
+
+        return employeeRepository.findAll(pageable).stream().map(this::mapToEmployeeResponseDto)
+                .toList();
+    }
+
+    private boolean isSortFieldNotValid(String sortByField) {
+        Set<String> allowedSortByFields = Set.of("id","firstName","lastName","salary","dateOfJoining");
+
+        return !allowedSortByFields.contains(sortByField);
+    }
+
+    private boolean isSortDirFieldNotValid(String sortDirField){
+        Set<String> allowedSortDirFields = Set.of("ASC","DESC");
+
+        return !allowedSortDirFields.contains(sortDirField);
+
     }
 
     @Override
@@ -64,9 +108,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id, HttpStatus.NOT_FOUND));
 
-        return EmployeeResponseMapper.toEmployeeResponseDto(employee.getId(),
-                employee.getFirstName(),employee.getLastName(),employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
-                employee.getDateOfJoining(),employee.getActive(),employee.getIsAnIntern());
+        return mapToEmployeeResponseDto(employee);
     }
 
     @Override
@@ -153,8 +195,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeResponseDto> filterBySalaryRange(BigDecimal min, BigDecimal max) {
-        List<Employee> employees = employeeRepository.findBySalaryRange(min,max);
-        return mapToEmployeeRequestDto(employees);
+        return employeeRepository.findBySalaryRange(min,max).stream().map(this::mapToEmployeeResponseDto).toList();
     }
 
 
@@ -162,7 +203,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRequestDto.isAnIntern() && !department.getIsAcceptingIntern();
     }
 
-    //FIXME: Will still change this method to Boolean
     private void validateSalary(BigDecimal employeeSalary, boolean isAnIntern){
         BigDecimal minimumInternSalary = new BigDecimal(15_000);
         BigDecimal minimumNonInternSalary = new BigDecimal(30_000);
@@ -174,11 +214,23 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new EmployeeException("Minimum non intern salary is 30,000",HttpStatus.BAD_REQUEST);
     }
 
-    private List<EmployeeResponseDto> mapToEmployeeRequestDto(List<Employee> employees){
-        return employees.stream().map(emp -> new EmployeeResponseDto(emp.getId(),emp.getFirstName(),
-                emp.getLastName(),emp.getEmail(),emp.getDepartment().getDepartmentName(),emp.getSalary(),
-                emp.getDateOfJoining(),emp.getActive(),emp.getIsAnIntern())).toList();
+    private EmployeeResponseDto mapToEmployeeResponseDto(Employee employee){
+        return new EmployeeResponseDto(employee.getId(),employee.getFirstName(),employee.getLastName(),
+                employee.getEmail(),employee.getDepartment().getDepartmentName(),employee.getSalary(),
+                employee.getDateOfJoining(), employee.getActive(), employee.getIsAnIntern());
     }
 
+    private Employee mapToEmployeeEntity(EmployeeRequestDto emp, Department department){
+        return Employee.builder()
+                .firstName(emp.firstName().trim())
+                .lastName(emp.lastName().trim())
+                .email(emp.email().trim())
+                .department(department)
+                .salary(emp.salary())
+                .dateOfJoining(emp.dateOfJoining())
+                .active(emp.active())
+                .isAnIntern(emp.isAnIntern())
+                .build();
+    }
 
 }
