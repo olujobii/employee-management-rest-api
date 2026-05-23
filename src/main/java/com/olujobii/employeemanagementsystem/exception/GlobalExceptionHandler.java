@@ -1,7 +1,7 @@
 package com.olujobii.employeemanagementsystem.exception;
 
 import com.olujobii.employeemanagementsystem.dto.response.APIErrorResponseDTO;
-import com.olujobii.employeemanagementsystem.dto.response.ResponseWrapper;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,38 +12,42 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateDepartmentException.class)
-    public ResponseEntity<ResponseWrapper<APIErrorResponseDTO>> handleDuplicateDepartmentException(DuplicateDepartmentException ex){
-        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now());
-        ResponseWrapper<APIErrorResponseDTO> response = ResponseWrapper.<APIErrorResponseDTO>builder()
-                                                                        .data(errorResponse)
-                                                                        .statusCode(ex.getStatus())
-                                                                        .message(ex.getMessage())
-                                                                        .build();
+    public ResponseEntity<APIErrorResponseDTO> handleDuplicateDepartmentException(DuplicateDepartmentException ex){
+        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now(),
+                HttpStatusCode.valueOf(ex.getStatus().value()));
 
-        return ResponseEntity.status(ex.getStatus()).body(response);
+        return ResponseEntity.status(ex.getStatus()).body(errorResponse);
     }
 
     @ExceptionHandler(InvalidActiveStateException.class)
-    public ResponseEntity<ResponseWrapper<APIErrorResponseDTO>> handleInvalidActiveStateException(InvalidActiveStateException ex){
-        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now());
-        ResponseWrapper<APIErrorResponseDTO> response = ResponseWrapper.<APIErrorResponseDTO>builder()
-                .data(errorResponse)
-                .statusCode(ex.getStatus())
-                .message(ex.getMessage())
-                .build();
+    public ResponseEntity<APIErrorResponseDTO> handleInvalidActiveStateException(InvalidActiveStateException ex){
+        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now(),
+                HttpStatusCode.valueOf(ex.getStatus().value()));
 
-        return ResponseEntity.status(ex.getStatus()).body(response);
+        return ResponseEntity.status(ex.getStatus()).body(errorResponse);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ResponseWrapper<APIErrorResponseDTO>> handleResourceNotFoundException(ResourceNotFoundException ex){
-        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now());
-        ResponseWrapper<APIErrorResponseDTO> response = ResponseWrapper.<APIErrorResponseDTO>builder()
-                .data(errorResponse)
-                .statusCode(ex.getStatus())
-                .message(ex.getMessage())
-                .build();
+    public ResponseEntity<APIErrorResponseDTO> handleResourceNotFoundException(ResourceNotFoundException ex){
+        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now(),
+                HttpStatusCode.valueOf(ex.getStatus().value()));
 
-        return ResponseEntity.status(ex.getStatus()).body(response);
+        return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(EmployeeException.class)
+    public ResponseEntity<APIErrorResponseDTO> handleEmployeeException(EmployeeException ex){
+        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now(),
+                HttpStatusCode.valueOf(ex.getStatus().value()));
+
+        return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(DepartmentException.class)
+    public ResponseEntity<APIErrorResponseDTO> handleDepartmentException(DepartmentException ex){
+        APIErrorResponseDTO errorResponse = new APIErrorResponseDTO(ex.getMessage(), LocalDateTime.now(),
+                HttpStatusCode.valueOf(ex.getStatus().value()));
+
+        return ResponseEntity.status(ex.getStatus()).body(errorResponse);
     }
 }
