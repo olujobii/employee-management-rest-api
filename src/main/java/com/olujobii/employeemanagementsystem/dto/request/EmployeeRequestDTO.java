@@ -1,11 +1,7 @@
 package com.olujobii.employeemanagementsystem.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.olujobii.employeemanagementsystem.entity.Department;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,19 +20,24 @@ public record EmployeeRequestDTO(
         String email,
 
         @NotNull(message = "department is a required field")
-        Department department,
+        Long departmentId,
 
         @NotNull(message = "salary is a required field")
         BigDecimal salary,
 
         @NotNull(message = "dateOfJoining is a required field")
         @JsonFormat(pattern = "yyyy-MM-dd")
+        @PastOrPresent(message = "dateOfJoining must be the current date or a past date")
         LocalDate dateOfJoining,
 
-        @NotNull(message = "active is a required field")
         Boolean active,
 
         @NotNull(message = "isAnIntern is a required field")
         Boolean isAnIntern
 ) {
+
+        public EmployeeRequestDTO{
+              if(active == null)
+                      active = true;
+        }
 }
