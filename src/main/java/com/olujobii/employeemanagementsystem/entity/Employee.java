@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,9 +48,9 @@ public class Employee {
     private BigDecimal salary;
 
     @NotNull
-    @PastOrPresent
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "date_of_joining", nullable = false)
+    @PastOrPresent(message = "dateOfJoining must be the current date or a past date")
     private LocalDate dateOfJoining;
 
     @NotNull
@@ -64,13 +62,24 @@ public class Employee {
     private Boolean isAnIntern;
 
     @NotNull
-    @CreationTimestamp
+//    @CreationTimestamp
     @Column(updatable = false, name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @NotNull
-    @UpdateTimestamp
+//    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    public void onCreate(){
+        LocalDateTime now = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    public void onUpdate(){
+        updatedAt = LocalDateTime.now();
+    }
 }
