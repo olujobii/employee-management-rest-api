@@ -25,8 +25,9 @@ public class DepartmentController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseWrapper<DepartmentResponseDTO>> createDepartment(@Valid @RequestBody DepartmentRequestDTO payload){
-        return ResponseEntity.status(HttpStatus.CREATED).body(departmentService.createDepartment(payload));
+    public ResponseEntity<Void> createDepartment(@Valid @RequestBody DepartmentRequestDTO payload){
+        departmentService.createDepartment(payload);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/{id}")

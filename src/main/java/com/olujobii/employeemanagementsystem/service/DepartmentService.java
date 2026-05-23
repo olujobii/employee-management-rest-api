@@ -10,7 +10,7 @@ import java.util.List;
 public interface DepartmentService {
     ResponseWrapper<List<DepartmentResponseDTO>> getAllDepartments();
 
-    ResponseWrapper<DepartmentResponseDTO> createDepartment(@Valid DepartmentRequestDTO payload);
+    void createDepartment(@Valid DepartmentRequestDTO payload);
 
     ResponseWrapper<DepartmentResponseDTO> getDepartment(Long id);
 

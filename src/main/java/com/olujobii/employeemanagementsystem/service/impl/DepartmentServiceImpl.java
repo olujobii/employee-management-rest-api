@@ -37,7 +37,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public ResponseWrapper<DepartmentResponseDTO> createDepartment(@Valid DepartmentRequestDTO payload) {
+    public void createDepartment(@Valid DepartmentRequestDTO payload) {
         String departmentName = payload.departmentName().trim();
         Boolean isAcceptingIntern = payload.isAcceptingIntern();
         Boolean isActive = payload.isActive();
@@ -48,15 +48,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                     throw new DuplicateDepartmentException("Duplicate department",HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()));
                 });
 
-        //Map the payload to department entity, save and return it
-        Department department = departmentRepository.save(toDepartmentEntity(departmentName,isAcceptingIntern,isActive));
-
-        //fetch created department
-        return ResponseWrapper.<DepartmentResponseDTO>builder()
-                .data(toResponseDTO(department))
-                .message("Department created")
-                .statusCode(HttpStatusCode.valueOf(HttpStatus.CREATED.value()))
-                .build();
+        departmentRepository.save(toDepartmentEntity(departmentName,isAcceptingIntern,isActive));
     }
 
     @Override
@@ -110,9 +102,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void hardDeleteDepartment(Long id) {
         Department department = fetchDepartmentById(id);
 
+        //FIXME: For us to hard delete, we have to make sure the department is currently inactive
         if(department.getIsActive()) throw new InvalidActiveStateException("Department must not be active", HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()));
 
-        //FIXME: For us to soft delete a department or even hard delete, we have to make sure the department currently has no employee
         departmentRepository.delete(department);
     }
 
