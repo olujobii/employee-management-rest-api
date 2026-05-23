@@ -21,24 +21,27 @@ import java.time.LocalDateTime;
 public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @NotBlank
     @Size(max = 100)
-    @Column(name = "department_name", unique = true)
+    @Column(name = "department_name", unique = true, length = 100, nullable = false)
     private String departmentName;
 
     @NotNull
-    @Column(name = "is_accepting_intern")
+    @Column(name = "is_accepting_intern", nullable = false)
     private Boolean isAcceptingIntern;
 
     @NotNull
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
+
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @NotNull
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 }
