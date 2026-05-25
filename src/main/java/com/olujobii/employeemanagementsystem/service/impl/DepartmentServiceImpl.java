@@ -4,10 +4,12 @@ import com.olujobii.employeemanagementsystem.dto.request.DepartmentRequestDTO;
 import com.olujobii.employeemanagementsystem.dto.response.DepartmentResponseDTO;
 import com.olujobii.employeemanagementsystem.dto.response.ResponseWrapper;
 import com.olujobii.employeemanagementsystem.entity.Department;
+import com.olujobii.employeemanagementsystem.exception.DepartmentException;
 import com.olujobii.employeemanagementsystem.exception.DuplicateDepartmentException;
 import com.olujobii.employeemanagementsystem.exception.InvalidActiveStateException;
 import com.olujobii.employeemanagementsystem.exception.ResourceNotFoundException;
 import com.olujobii.employeemanagementsystem.repository.DepartmentRepository;
+import com.olujobii.employeemanagementsystem.repository.EmployeeRepository;
 import com.olujobii.employeemanagementsystem.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.List;
 @Validated
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     public ResponseWrapper<List<DepartmentResponseDTO>> getAllDepartments() {
@@ -91,8 +94,11 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void softDeleteDepartment(Long id) {
         Department department = fetchDepartmentById(id);
 
-        //Change department active status to false
-        //FIXME: For us to soft delete a department or even hard delete, we have to make sure the department currently has no employee
+        Integer employeeCount = employeeRepository.countByDepartment(department);
+
+        if (employeeCount > 0)
+            throw new DepartmentException("Department cannot be made inactive because employees are there", HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()));
+
         department.setIsActive(false);
 
         departmentRepository.save(department);
@@ -102,7 +108,6 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void hardDeleteDepartment(Long id) {
         Department department = fetchDepartmentById(id);
 
-        //FIXME: For us to hard delete, we have to make sure the department is currently inactive
         if(department.getIsActive()) throw new InvalidActiveStateException("Department must not be active", HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()));
 
         departmentRepository.delete(department);

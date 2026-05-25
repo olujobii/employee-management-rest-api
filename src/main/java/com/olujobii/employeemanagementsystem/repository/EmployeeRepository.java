@@ -1,5 +1,6 @@
 package com.olujobii.employeemanagementsystem.repository;
 
+import com.olujobii.employeemanagementsystem.entity.Department;
 import com.olujobii.employeemanagementsystem.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,6 @@ public interface EmployeeRepository extends JpaRepository<Employee,Long> {
 
     @Query("select e from Employee e where e.salary BETWEEN :min AND :max")
     List<Employee> findBySalaryRange(BigDecimal min, BigDecimal max);
+
+    Integer countByDepartment(Department department);
 }
