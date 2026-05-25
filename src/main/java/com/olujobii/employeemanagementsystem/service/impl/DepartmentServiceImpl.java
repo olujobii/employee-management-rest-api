@@ -27,7 +27,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public ResponseWrapper<List<DepartmentResponseDTO>> getAllDepartments() {
         List<DepartmentResponseDTO> departments = departmentRepository.findAll()
-                .stream().map(this::toResponseDTO).toList();
+                .stream().map(this::toDepartmentResponseDTO).toList();
 
         return ResponseWrapper.<List<DepartmentResponseDTO>>builder()
                 .data(departments)
@@ -56,7 +56,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = fetchDepartmentById(id);
 
         return ResponseWrapper.<DepartmentResponseDTO>builder()
-                .data(toResponseDTO(department))
+                .data(toDepartmentResponseDTO(department))
                 .message("Department fetched")
                 .statusCode(HttpStatusCode.valueOf(HttpStatus.OK.value()))
                 .build();
@@ -81,7 +81,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         department = departmentRepository.save(department);
         return ResponseWrapper.<DepartmentResponseDTO>builder()
-                .data(toResponseDTO(department))
+                .data(toDepartmentResponseDTO(department))
                 .message("Department updated")
                 .statusCode(HttpStatusCode.valueOf(HttpStatus.OK.value()))
                 .build();
@@ -114,7 +114,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
 
-    private DepartmentResponseDTO toResponseDTO(Department department){
+    private DepartmentResponseDTO toDepartmentResponseDTO(Department department){
         return new DepartmentResponseDTO(department.getId(),
                                         department.getDepartmentName(),
                                         department.getIsAcceptingIntern(),
