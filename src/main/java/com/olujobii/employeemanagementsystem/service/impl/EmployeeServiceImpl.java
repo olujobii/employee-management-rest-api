@@ -5,15 +5,15 @@ import com.olujobii.employeemanagementsystem.dto.response.EmployeeResponseDTO;
 import com.olujobii.employeemanagementsystem.dto.response.ResponseWrapper;
 import com.olujobii.employeemanagementsystem.entity.Department;
 import com.olujobii.employeemanagementsystem.entity.Employee;
-import com.olujobii.employeemanagementsystem.exception.DepartmentException;
-import com.olujobii.employeemanagementsystem.exception.DuplicateEmailException;
-import com.olujobii.employeemanagementsystem.exception.EmployeeException;
-import com.olujobii.employeemanagementsystem.exception.ResourceNotFoundException;
+import com.olujobii.employeemanagementsystem.exception.*;
 import com.olujobii.employeemanagementsystem.repository.DepartmentRepository;
 import com.olujobii.employeemanagementsystem.repository.EmployeeRepository;
 import com.olujobii.employeemanagementsystem.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -32,9 +32,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
 
     @Override
-    public ResponseWrapper<List<EmployeeResponseDTO>> getAllEmployees() {
-        List<EmployeeResponseDTO> employees = employeeRepository.findAll().stream()
-                .map(this::toEmployeeDTO).toList();
+    public ResponseWrapper<List<EmployeeResponseDTO>> getAllEmployees(Integer page, Integer size, String sort) {
+        if(page < 0) throw new EmployeeException("Page number cannot be less than 0", HttpStatusCode.valueOf(HttpStatus.UNPROCESSABLE_CONTENT.value()));
+        if(size < 10) throw new EmployeeException("Page Size cannot be less than 10", HttpStatusCode.valueOf(HttpStatus.UNPROCESSABLE_CONTENT.value()));
+
+        Sort sorts =sortingLogic(sort);
+        Pageable pageable = PageRequest.of(page,size,sorts);
+
+        List<EmployeeResponseDTO> employees = employeeRepository.findAll(pageable).stream()
+                .map(this::toEmployeeResponseDTO).toList();
 
         return ResponseWrapper.<List<EmployeeResponseDTO>>builder()
                 .data(employees)
@@ -45,11 +51,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public ResponseWrapper<EmployeeResponseDTO> getEmployee(Long id) {
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id "+id, HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value())));
+        Employee employee = fetchEmployeeById(id);
 
         return ResponseWrapper.<EmployeeResponseDTO>builder()
-                .data(toEmployeeDTO(employee))
+                .data(toEmployeeResponseDTO(employee))
                 .message("Employee fetched")
                 .statusCode(HttpStatusCode.valueOf(HttpStatus.OK.value()))
                 .build();
@@ -103,8 +108,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public ResponseWrapper<EmployeeResponseDTO> updateEmployee(Long id,@Valid EmployeeRequestDTO payload) {
         //Check if employee ID exists
-        Employee employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee does not exist with id "+id, HttpStatusCode.valueOf(HttpStatus.NOT_FOUND.value())));
+        Employee employee = fetchEmployeeById(id);
 
         String payloadFirstName = payload.firstName().trim();
         String payloadLastName = payload.lastName().trim();
@@ -155,10 +159,44 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee = employeeRepository.save(employee);
 
         return ResponseWrapper.<EmployeeResponseDTO>builder()
-                .data(toEmployeeDTO(employee))
+                .data(toEmployeeResponseDTO(employee))
                 .message("Employee updated")
                 .statusCode(HttpStatusCode.valueOf(HttpStatus.OK.value()))
                 .build();
+    }
+
+    @Override
+    public void softDeleteEmployee(Long id) {
+        Employee employee = fetchEmployeeById(id);
+
+        employee.setActive(false);
+        employeeRepository.save(employee);
+    }
+
+    @Override
+    public void hardDeleteEmployee(Long id) {
+        Employee employee = fetchEmployeeById(id);
+
+        if(employee.getActive()) throw new InvalidActiveStateException("Employee must not be active", HttpStatusCode.valueOf(HttpStatus.CONFLICT.value()));
+
+        employeeRepository.delete(employee);
+    }
+
+    @Override
+    public ResponseWrapper<List<EmployeeResponseDTO>> fetchEmployeeBySalaryRange(BigDecimal min, BigDecimal max) {
+        List<EmployeeResponseDTO> employees = employeeRepository.findBySalaryRange(min, max)
+                .stream().map(this::toEmployeeResponseDTO).toList();
+
+        return ResponseWrapper.<List<EmployeeResponseDTO>>builder()
+                .data(employees)
+                .message("Employees fetched")
+                .statusCode(HttpStatusCode.valueOf(HttpStatus.OK.value()))
+                .build();
+    }
+
+    private Employee fetchEmployeeById(Long id){
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee does not exist with id "+id, HttpStatusCode.valueOf(HttpStatus.NO_CONTENT.value())));
     }
 
     private boolean validateSalary(BigDecimal payloadSalary, boolean payloadIsAnIntern){
@@ -169,7 +207,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 || (!payloadIsAnIntern && minimumSalaryForFullTime.compareTo(payloadSalary) > 0);
     }
 
-    private EmployeeResponseDTO toEmployeeDTO(Employee employee){
+    private EmployeeResponseDTO toEmployeeResponseDTO(Employee employee){
         return new EmployeeResponseDTO(employee.getId(), employee.getFirstName(), employee.getLastName(), employee.getEmail(),
                 employee.getDepartment().getDepartmentName(), employee.getSalary(), employee.getDateOfJoining(),
                 employee.getActive(),employee.getIsAnIntern());
@@ -187,5 +225,14 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .active(active)
                 .isAnIntern(isAnIntern)
                 .build();
+    }
+
+    private Sort sortingLogic(String sort){
+        if(sort.equalsIgnoreCase("ASC"))
+            return Sort.by(Sort.Direction.ASC, "id");
+        else if(sort.equalsIgnoreCase("DESC"))
+            return Sort.by(Sort.Direction.DESC, "id");
+        else
+            throw new EmployeeException("Invalid sort param", HttpStatusCode.valueOf(HttpStatus.UNPROCESSABLE_CONTENT.value()));
     }
 }
